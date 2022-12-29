@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CityStructure 3D Render</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  
+  <style type="text/css">
+	  body {
+	  /* remove margins and scroll bars */
+	  margin: 0;
+	  overflow: hidden;
+
+	  /* style text */
+	  text-align: center;
+	  font-size: 12px;
+	  font-family: Sans-Serif;
+
+	  /* color text */
+	  color: #444;
+	}
+
+	h1 {
+	  /* position the heading */
+	  position: absolute;
+	  width: 100%;
+
+	  /* make sure that the heading is drawn on top */
+	  z-index: 1;
+	}
+
+	#scene-container {
+	  /* tell our scene container to take up the full page */
+	  position: absolute;
+	  width: 100%;
+	  height: 100%;
+
+	  /*
+		Set the container's background color to the same as the scene's
+		background to prevent flashing on load
+	  */
+	  background-color: skyblue;
+	}
+
+  </style>
+
+  <script type="module">
+  
+  import {
+  BoxBufferGeometry,
+  Color,
+  Mesh,
+  MeshBasicMaterial,
+  PerspectiveCamera,
+  Scene,
+  WebGLRenderer,
+  AmbientLight,
+  PointLight,
+} from 'https://cdn.skypack.dev/three@0.136.0';
+
+// Get a reference to the container element that will hold our scene
+const container = document.querySelector('#scene-container');
+
+// create a Scene
+const scene = new Scene();
+
+// Set the background color
+scene.background = new Color('white');
+
+// Create a camera
+const fov = 45; // AKA Field of View
+const aspect = container.clientWidth / container.clientHeight;
+const near = 0.1; // the near clipping plane
+const far = 100; // the far clipping plane
+
+const camera = new PerspectiveCamera(fov, aspect, near, far);
+//camera.position.x = 1 * Math.cos( 45 ); 
+
+// every object is initially created at ( 0, 0, 0 )
+// move the camera back so we can view the scene
+camera.position.set(10, 5, 10);
+camera.lookAt(0, 0, 0);
+
+// create geometries
+const geometry = new BoxBufferGeometry(2, 1, 2.5);
+const geometry2 = new BoxBufferGeometry(2, 0.5, 1.6);
+
+// create a default (white) Basic material
+const material = new MeshBasicMaterial({color: "#108ad1", opacity: 0.5, transparent: true});
+const material2 = new MeshBasicMaterial({color: "#e8ee91", opacity: 0.7, transparent: true});
+
+// create a Mesh containing the geometry and material
+const cube = new Mesh(geometry, material);
+const cube2 = new Mesh(geometry2, material2);
+
+cube2.position.y = 0.8;
+cube2.position.x = 0.1;
+cube2.position.z = -0.3;
+
+// add the mesh to the scene
+scene.add(cube);
+scene.add(cube2);
+
+// add light for better perspective
+scene.add( new AmbientLight( 0x222222 ) );
+const light = new PointLight( 0xffffff, 1 );
+camera.add( light );
+
+
+// create the renderer
+const renderer = new WebGLRenderer();
+
+// next, set the renderer to the same size as our container element
+renderer.setSize(container.clientWidth, container.clientHeight);
+
+// finally, set the pixel ratio so that our scene will look good on HiDPI displays
+renderer.setPixelRatio(window.devicePixelRatio);
+
+// add the automatically created <canvas> element to the page
+container.append(renderer.domElement);
+
+// render, or 'create a still image', of the scene
+renderer.render(scene, camera);
+
+  </script>
+</head>
+
+<body>
+  <h1>CityStructure 3D Render</h1>
+
+  <div id="scene-container">
+    <!-- <canvas> will be inserted here -->
+  </div>
+</body>
+
+</html>
