@@ -67,6 +67,12 @@
     </div>
 
     <script>
+
+        // Prevent double-click on the page
+        document.ondblclick = function(e) {
+            e.preventDefault();
+        }
+
         // Game variables
         let score = 0;
         let timer = 10;
