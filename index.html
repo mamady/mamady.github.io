@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tap Button Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        #game-container {
+            margin-top: 50px;
+        }
+        #score {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #timer {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: red;
+        }
+        #tapButton, #restartButton {
+            font-size: 30px;
+            padding: 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+        }
+        #restartButton {
+            background-color: #28a745;
+        }
+        #leaderboard {
+            margin-top: 40px;
+            font-size: 18px;
+        }
+        #leaderboard-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        #leaderboard-list li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tap Button Game</h1>
+    <div id="game-container">
+        <p id="score">Score: 0</p>
+        <p id="timer">Time Left: 10</p>
+        <button id="tapButton">Tap Me!</button>
+        <button id="restartButton" style="display:none;">Restart Game</button> <!-- Restart button hidden initially -->
+    </div>
+
+    <div id="leaderboard">
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard-list">
+            <!-- Leaderboard will be populated here -->
+        </ul>
+    </div>
+
+    <script>
+        // Game variables
+        let score = 0;
+        let timer = 10;
+        let gameActive = false;
+        let interval; // To store interval reference for timer
+        const scoreDisplay = document.getElementById("score");
+        const timerDisplay = document.getElementById("timer");
+        const tapButton = document.getElementById("tapButton");
+        const restartButton = document.getElementById("restartButton");
+        const leaderboardList = document.getElementById("leaderboard-list");
+
+        // Load leaderboard from localStorage
+        function loadLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+            leaderboardList.innerHTML = "";
+            leaderboard.sort((a, b) => b.score - a.score); // Sort by score, descending
+            leaderboard.forEach(player => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `${player.name}: ${player.score}`;
+                leaderboardList.appendChild(listItem);
+            });
+        }
+
+        // Save leaderboard to localStorage
+        function saveLeaderboard(leaderboard) {
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+        }
+
+        // Timer countdown function
+        function countdownTimer() {
+            interval = setInterval(function() {
+                if (timer > 0 && gameActive) {
+                    timer--;
+                    timerDisplay.textContent = `Time Left: ${timer}`;
+                } else {
+                    clearInterval(interval);
+                    gameActive = false;
+                    tapButton.disabled = true; // Disable tap button
+                    restartButton.style.display = "inline-block"; // Show restart button
+                    alert("Time's up! Your score is " + score);
+                    submitScore(score); // Submit score after time ends
+                }
+            }, 1000); // Update every second
+        }
+
+        // Update score on button tap
+        tapButton.addEventListener("click", function() {
+            if (!gameActive) {
+                // Start the game the first time the button is clicked
+                gameActive = true;
+                countdownTimer();
+            }
+
+            if (gameActive) {
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+            }
+        });
+
+        // Submit score and update leaderboard in localStorage
+        function submitScore(score) {
+            const playerName = prompt("Enter your name:");
+            if (playerName) {
+                const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+                leaderboard.push({ name: playerName, score: score });
+                saveLeaderboard(leaderboard);
+                alert("Score submitted!");
+                loadLeaderboard();
+            }
+        }
+
+        // Restart the game
+        restartButton.addEventListener("click", function() {
+            // Reset score and timer
+            score = 0;
+            timer = 10;
+            scoreDisplay.textContent = `Score: ${score}`;
+            timerDisplay.textContent = `Time Left: ${timer}`;
+            tapButton.disabled = false; // Re-enable tap button
+            restartButton.style.display = "none"; // Hide restart button
+            gameActive = false; // Reset game state
+            loadLeaderboard(); // Reload leaderboard after restart
+        });
+
+        // Load leaderboard on page load
+        loadLeaderboard();
+    </script>
+
+</body>
+</html>
+
