@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
     <title>Tap Button Game</title>
     <style>
         body {
@@ -127,7 +128,7 @@
 
         // Submit score and update leaderboard in localStorage
         function submitScore(score) {
-            const playerName = prompt("Enter your name:");
+            const playerName = prompt("Enter your initials or nickname:");
             if (playerName) {
                 const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
                 leaderboard.push({ name: playerName, score: score });
