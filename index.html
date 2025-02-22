@@ -41,11 +41,7 @@
             font-size: 18px;
         }
         #leaderboard-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        #leaderboard-list li {
-            margin: 5px 0;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -61,13 +57,12 @@
 
     <div id="leaderboard">
         <h3>Leaderboard</h3>
-        <ul id="leaderboard-list">
+        <table id="leaderboard-list">
             <!-- Leaderboard will be populated here -->
-        </ul>
+        </table>
     </div>
 
     <script>
-
         // Prevent double-click on the page
         document.ondblclick = function(e) {
             e.preventDefault();
@@ -75,9 +70,12 @@
 
         // Game variables
         let score = 0;
+        let lastScore;
         let timer = 10;
         let gameActive = false;
         let interval; // To store interval reference for timer
+        let bot = false;
+        let botInterval;
         const scoreDisplay = document.getElementById("score");
         const timerDisplay = document.getElementById("timer");
         const tapButton = document.getElementById("tapButton");
@@ -86,14 +84,19 @@
 
         // Load leaderboard from localStorage
         function loadLeaderboard() {
-            const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+            let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
             leaderboardList.innerHTML = "";
             leaderboard.sort((a, b) => b.score - a.score); // Sort by score, descending
+            // only show the top 10
+            leaderboard = leaderboard.slice(0, 10);
+            // use a table with 2 columns
+            const table = document.createElement("table");
             leaderboard.forEach(player => {
-                const listItem = document.createElement("li");
-                listItem.textContent = `${player.name}: ${player.score}`;
-                leaderboardList.appendChild(listItem);
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${player.name}: </td><td>${player.score}</td>`;
+                table.appendChild(row);
             });
+            leaderboardList.appendChild(table);
         }
 
         // Save leaderboard to localStorage
@@ -110,10 +113,21 @@
                 } else {
                     clearInterval(interval);
                     gameActive = false;
-                    tapButton.disabled = true; // Disable tap button
-                    restartButton.style.display = "inline-block"; // Show restart button
-                    alert("Time's up! Your score is " + score);
-                    submitScore(score); // Submit score after time ends
+                    if (bot) {
+                        clearInterval(botInterval);
+                        const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+                        leaderboard.push({ name: "Robot Boss", score: score });
+                        saveLeaderboard(leaderboard);
+                        tapButton.innerHTML = "Tap Me!";
+                        bot = false;
+                        restartButton.click();
+                        document.querySelector("h1").textContent = "Tap Button Game";
+                    } else {
+                        tapButton.style.display = "none"; // Hide tap button
+                        restartButton.style.display = "inline-block"; // Show restart button
+                        alert("Time's up! Your score is " + score);
+                        submitScore(score); // Submit score after time ends
+                    }
                 }
             }, 1000); // Update every second
         }
@@ -134,10 +148,19 @@
 
         // Submit score and update leaderboard in localStorage
         function submitScore(score) {
-            const playerName = prompt("Enter your initials or nickname:");
+            let playerName = prompt("Enter your initials or nickname:");
             if (playerName) {
+                if (playerName.length == 0) {
+                    return;
+                }
+                // only allow letters and numbers spaces apostrophes and underscores, max 30 characters
+                playerName = playerName.replace(/[^a-zA-Z0-9_ ']/g, "");
+                if (playerName.length > 30) {
+                    playerName = playerName.slice(0, 30);
+                }
                 const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
                 leaderboard.push({ name: playerName, score: score });
+                lastScore = score;
                 saveLeaderboard(leaderboard);
                 alert("Score submitted!");
                 loadLeaderboard();
@@ -151,7 +174,7 @@
             timer = 10;
             scoreDisplay.textContent = `Score: ${score}`;
             timerDisplay.textContent = `Time Left: ${timer}`;
-            tapButton.disabled = false; // Re-enable tap button
+            tapButton.style.display = "inline-block"; // Show tap button
             restartButton.style.display = "none"; // Hide restart button
             gameActive = false; // Reset game state
             loadLeaderboard(); // Reload leaderboard after restart
@@ -159,7 +182,47 @@
 
         // Load leaderboard on page load
         loadLeaderboard();
-    </script>
+
+        // Robot Boss!
+        // if the user types in "a" "i" "d" "e" "n" in sequence 
+        let sequence = "";
+        document.addEventListener("keydown", function(event) {
+            if (score > 0) {
+                return;
+            }
+            // alert("Robot Boss! " + event.key);
+            if (event.key === "a" || event.key === "i" || event.key === "d" || event.key === "e" || event.key === "n") {
+                if (sequence[0] != "a") {
+                    sequence = "";
+                }
+                sequence += event.key;
+                if (sequence == "aiden") {
+                    alert("Robot Boss activated! Wait for 10 seconds.");
+                    // change h1 text to "Robot Boss is tapping for you!"
+                    document.querySelector("h1").textContent = "Robot Boss Activated!";
+                    // reset then start the game
+                    score = 0;
+                    timer = 10;
+                    gameActive = true;
+                    bot = true;
+                    // hide the tap button
+                    tapButton.innerHTML = "🤖";
+                    countdownTimer();
+                    
+                    // keep clicking the button until the timer is up
+                    // randomly between 50 and 100ms
+                    botInterval = setInterval(function() {
+                        tapButton.click();
+                    }, Math.floor(Math.random() * 50) + 50);
+
+                    sequence = "";
+                }
+            } else {
+                sequence = "";
+            }
+        });
+
+</script>
 
 </body>
 </html>
